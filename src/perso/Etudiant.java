@@ -13,6 +13,7 @@ public class Etudiant extends Personne
 		super(nom, age);
 		this.note = note;
 	}
+
 	public float getNote()
 	{
 		return this.note;
