@@ -2,6 +2,7 @@
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.net.SocketException;
 import java.util.LinkedList;
 import java.util.NoSuchElementException;
 
@@ -10,7 +11,9 @@ import java.util.NoSuchElementException;
  */
 public class ListenSocket extends Thread {
     private BufferedReader reader;
+    private Communication papa;
     private LinkedList<String> lines;
+    private boolean isPapaAlive = true;
 
 
 
@@ -22,7 +25,8 @@ public class ListenSocket extends Thread {
         this.reader = reader;
     }
 
-    public ListenSocket(BufferedReader reader){
+    public ListenSocket(BufferedReader reader, Communication papa){
+        this.papa = papa;
         this.reader = reader;
         this.lines = new LinkedList<String>();
 
@@ -31,24 +35,32 @@ public class ListenSocket extends Thread {
 
     public void run(){
         String aLire;
-        while (true){
+        boolean isRemoteAlive = true;
+        while (true && isPapaAlive && isRemoteAlive){
             try {
-                lines.add(reader.readLine());
+                aLire = reader.readLine();
+                if(aLire !=null) {
+                    lines.add(aLire);
+                    papa.debug("lu");
+                    papa.showLine(lines);
+                }
+
+
+            }catch (SocketException e){
+                isRemoteAlive = false;
+                papa.debug("1");
             }catch (IOException i) {
-                    i.printStackTrace();
-                    System.out.println("Rien a lire");
+                papa.debug("2");
             }
         }
 
     }
 
+    public void eraseLines() {
+        lines.clear();
+    }
 
-    public String getLastLine(){
-        try {
-            String lastLine = lines.remove();
-            return lastLine;
-        }catch (NoSuchElementException e) {
-            return "Rien à lire";
-        }
+    public void setPapaAlive(boolean b){
+        isPapaAlive = b;
     }
 }
