@@ -18,13 +18,15 @@ public class TCPServer {
 
 
         ArrayList<Socket> remote = new ArrayList<Socket>();
+        Socket current;
         CommunicaTCPServer server = new CommunicaTCPServer(1524);
         while(numClient !=5) {
 
-            remote.add(server.accept());
+            current = server.accept();
             try {
-                Communication toto = new Communication(new BufferedReader(new InputStreamReader(remote.get(numClient).getInputStream())),
-                        new BufferedWriter(new OutputStreamWriter(remote.get(numClient).getOutputStream())));
+
+                Communication toto = new Communication(new BufferedReader(new InputStreamReader(current.getInputStream())),
+                        new BufferedWriter(new OutputStreamWriter(current.getOutputStream())));
             } catch (IOException e) {
                 e.printStackTrace();
                 System.out.println("Erreur server : " + e);

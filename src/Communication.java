@@ -2,14 +2,18 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.*;
+import java.util.LinkedList;
 
 /**
  * Created by djemaa on 07/11/14.
  */
 public class Communication extends JFrame implements ActionListener {
+    private BufferedReader reader;
     private BufferedWriter writer;
-    private JButton bReceive;
+    private JButton bDrop;
     private JButton bSend;
     private JLabel lmessrec;
     private JLabel lmesssend;
@@ -19,23 +23,25 @@ public class Communication extends JFrame implements ActionListener {
 
     public Communication(BufferedReader reader, BufferedWriter writer)
     {
-        listener = new ListenSocket(reader);
+        this.reader = reader;
         this.writer = writer;
         this.initComponents();
 
     }
     private void initComponents()
     {
-        bReceive = new JButton("Receive");
-        bReceive.addActionListener(this);
+        bDrop = new JButton("Erase");
+        bDrop.addActionListener(this);
         bSend = new JButton("Send");
         bSend.addActionListener(this);
         bSend.setActionCommand("Send");
-        bReceive.setActionCommand("Receive");
+        bDrop.setActionCommand("Drop");
         lmessrec = new JLabel("Message receive : ");
         lmesssend = new JLabel("Message to send : ");
         textRec = new JTextArea();
         textToSend = new JTextArea("Entrez votre message");
+        listener = new ListenSocket(reader, this);
+        listener.start();
 
         textRec.setEditable(false);
         JScrollPane scrollTextRec = new JScrollPane(textRec);
@@ -45,7 +51,7 @@ public class Communication extends JFrame implements ActionListener {
         this.add(lmesssend);
         this.add(scrollTextToSend);
         this.add(bSend);
-        this.add(bReceive);
+        this.add(bDrop);
         this.add(lmessrec);
         this.add(scrollTextRec);
 
@@ -53,8 +59,19 @@ public class Communication extends JFrame implements ActionListener {
 
         this.setVisible(true);
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        this.addWindowListener(new WindowAdapter() {
+            public void windowClosing(WindowEvent e) {
+                bye();
+            }
+        });
 
 
+    }
+
+    private void bye() {
+        bDrop.removeActionListener(this);
+        bSend.removeActionListener(this);
+        listener.setPapaAlive(false);
     }
 
     @Override
@@ -62,19 +79,15 @@ public class Communication extends JFrame implements ActionListener {
         if(e.getActionCommand().equals("Send")) {
             try {
                 String aEcrire = textToSend.getText();
-                System.out.println(aEcrire);
-                writer.write(aEcrire);
+                writer.write(aEcrire+"\n");
                 writer.flush();
 
             } catch (IOException i) {
                 i.printStackTrace();
                 System.out.println("Erreur lors de l'écriture :" +i);
-            } finally {
-
             }
-        }else if(e.getActionCommand().equals("Receive")){
-            textRec.setText(listener.getLastLine());
-
+        }else if (e.getActionCommand().equals("Drop")) {
+            listener.eraseLines();
         }
 
     }
@@ -93,5 +106,16 @@ public class Communication extends JFrame implements ActionListener {
         }catch (IOException e){
             e.printStackTrace();
         }
+    }
+
+    public void showLine(LinkedList<String> toto) {
+        textRec.setText("");
+        for (String i: toto){
+            textRec.setText(textRec.getText()+"\n"+i);
+
+        }
+    }
+    public void debug(String toto){
+        System.out.println("Debug :"+toto);
     }
 }
